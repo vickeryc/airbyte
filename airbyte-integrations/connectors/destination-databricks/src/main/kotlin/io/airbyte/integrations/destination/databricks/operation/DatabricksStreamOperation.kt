@@ -35,7 +35,11 @@ class DatabricksStreamOperation(
         disableTypeDedupe = disableTypeDedupe
     ) {
     private val log = KotlinLogging.logger {}
-    override fun writeRecords(streamConfig: StreamConfig, stream: Stream<PartialAirbyteMessage>) {
+    override fun writeRecordsImpl(
+        streamConfig: StreamConfig,
+        suffix: String,
+        stream: Stream<PartialAirbyteMessage>
+    ) {
         val writeBuffer = DatabricksFileBufferFactory.createBuffer(fileUploadFormat)
         writeBuffer.use {
             stream.forEach { record: PartialAirbyteMessage ->
@@ -54,7 +58,7 @@ class DatabricksStreamOperation(
                     )
                 }) to staging"
             }
-            storageOperation.writeToStage(streamConfig, writeBuffer)
+            storageOperation.writeToStage(streamConfig, suffix, writeBuffer)
         }
     }
 }

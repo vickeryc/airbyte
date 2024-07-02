@@ -79,11 +79,11 @@ class DatabricksSqlGeneratorIntegrationTest :
     }
 
     override fun createRawTable(streamId: StreamId) {
-        destinationHandler.execute(databricksSqlGenerator.createRawTable(streamId))
+        destinationHandler.execute(databricksSqlGenerator.createRawTable(streamId, suffix = ""))
     }
 
     override fun createV1RawTable(v1RawTable: StreamId) {
-        TODO("Not yet implemented")
+        throw NotImplementedError("Databricks does not support a V1->V2 migration")
     }
 
     override fun insertRawTableRecords(streamId: StreamId, records: List<JsonNode>) {
@@ -130,7 +130,7 @@ class DatabricksSqlGeneratorIntegrationTest :
     }
 
     override fun insertV1RawTableRecords(streamId: StreamId, records: List<JsonNode>) {
-        TODO("Not yet implemented")
+        throw NotImplementedError("Databricks does not support a V1->V2 migration")
     }
 
     override fun insertFinalTableRecords(

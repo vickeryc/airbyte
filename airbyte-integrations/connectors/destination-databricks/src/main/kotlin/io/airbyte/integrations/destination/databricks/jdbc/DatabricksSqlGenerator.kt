@@ -102,10 +102,10 @@ class DatabricksSqlGenerator(
     }
 
     // Start: Functions scattered over other classes needed for T+D
-    fun createRawTable(streamId: StreamId): Sql {
+    fun createRawTable(streamId: StreamId, suffix: String): Sql {
         return Sql.of(
             """
-                CREATE TABLE IF NOT EXISTS $unityCatalogName.${streamId.rawNamespace}.${streamId.rawName} (
+                CREATE TABLE IF NOT EXISTS $unityCatalogName.${streamId.rawNamespace}.${streamId.rawName}$suffix (
                     $AB_RAW_ID STRING,
                     $AB_EXTRACTED_AT TIMESTAMP,
                     $AB_LOADED_AT TIMESTAMP,
