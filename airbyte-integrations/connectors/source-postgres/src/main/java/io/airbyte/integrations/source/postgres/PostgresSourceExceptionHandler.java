@@ -55,6 +55,89 @@ public class PostgresSourceExceptionHandler extends ConnectorExceptionHandler {
             .sampleInternalMessage("ERROR: canceling statement due to conflict with recovery.")
             .referenceLinks(new ArrayList<>())
             .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres Debezium Connection Error")
+            .regexMatchingPattern(".*connection reset.*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database connection timeout when performing CDC reads, will retry.")
+            .sampleInternalMessage(
+                "io.airbyte.cdk.integrations.source.relationaldb.state.FailedRecordIteratorException: java.lang.RuntimeException: " +
+                    "java.lang.RuntimeException: org.apache.kafka.connect.errors.ConnectException: " +
+                    "An exception occurred in the change event producer. This connector will be stopped.")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres SQL Exception")
+            .regexMatchingPattern(".*permission denied for table.*")
+            .failureType(FailureType.CONFIG)
+            .externalMessage("Database read failed due to insufficient permissions to read a table (see detailed error for the table name)")
+            .sampleInternalMessage("java.lang.RuntimeException: org.postgresql.util.PSQLException: ERROR: permission denied for table xxx.")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres SQL Exception")
+            .regexMatchingPattern(".*canceling statement due to statement timeout.*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database read failed due SQL statement timeout, will retry.")
+            .sampleInternalMessage("org.postgresql.util.PSQLException: ERROR: canceling statement due to statement timeout")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres Hikari Connection Error")
+            .regexMatchingPattern(".*connection is not available, request timed out after*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database read failed due to connection timeout, will retry.")
+            .sampleInternalMessage(
+                "java.sql.SQLTransientConnectionException: HikariPool-x - Connection is not available, request timed out after xms")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614", "https://github.com/airbytehq/oncall/issues/5346"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres connection timeout")
+            .regexMatchingPattern(".*timed out after [1-9]\\d* msec*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database connection timeout, will retry.")
+            .sampleInternalMessage("java.util.concurrent.TimeoutException: Timed out after 15000 msec")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/oncall/issues/5381"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres Debezium Connection Error")
+            .regexMatchingPattern(".*broken pipe.*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database connection error when performing CDC reads, will retry.")
+            .sampleInternalMessage(
+                "io.airbyte.cdk.integrations.source.relationaldb.state.FailedRecordIteratorException: java.lang.RuntimeException: " +
+                    "java.lang.RuntimeException: org.apache.kafka.connect.errors.ConnectException: " +
+                    "An exception occurred in the change event producer. This connector will be stopped...." +
+                    "java.net.SocketException: Broken pipe")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/oncall/issues/5321"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("Postgres Debezium Connection Error")
+            .regexMatchingPattern(".*socket is closed.*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database connection error when performing CDC reads, will retry.")
+            .sampleInternalMessage(
+                "io.airbyte.cdk.integrations.source.relationaldb.state.FailedRecordIteratorException: java.lang.RuntimeException: " +
+                    "java.lang.RuntimeException: org.apache.kafka.connect.errors.ConnectException: " +
+                    "An exception occurred in the change event producer. This connector will be stopped...." +
+                    "java.net.SocketException: Socket is closed")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/oncall/issues/5293", "https://github.com/airbytehq/oncall/issues/5750"))
+            .build());
+
   }
 
 }

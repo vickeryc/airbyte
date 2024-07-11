@@ -7,6 +7,7 @@ import io.airbyte.cdk.integrations.util.ConnectorErrorProfileBuilder;
 import io.airbyte.cdk.integrations.util.ConnectorExceptionHandler;
 import io.airbyte.cdk.integrations.util.FailureType;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MySqlSourceExceptionHandler extends ConnectorExceptionHandler {
 
@@ -37,6 +38,55 @@ public class MySqlSourceExceptionHandler extends ConnectorExceptionHandler {
             .sampleInternalMessage("java.io.EOFException: Can not read response from server. " +
                 "Expected to read X bytes, read Y bytes before connection was unexpectedly lost.")
             .referenceLinks(new ArrayList<>())
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("MySQL Hikari Connection Error")
+            .regexMatchingPattern(".*connection is not available, request timed out after*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("Database read failed due to connection timeout, will retry.")
+            .sampleInternalMessage(
+                "java.sql.SQLTransientConnectionException: HikariPool-x - Connection is not available, request timed out after xms")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("MySQL Timezone Error")
+            .regexMatchingPattern(".*is unrecognized or represents more than one time zone*")
+            .failureType(FailureType.CONFIG)
+            .externalMessage("Please configure your database with the correct timezone found in the detailed error message. " +
+                "Please refer to the following documentation: https://dev.mysql.com/doc/refman/8.4/en/time-zone-support.html")
+            .sampleInternalMessage("java.lang.RuntimeException: Connector configuration is not valid. Unable to connect: " +
+                "The server time zone value 'PDT' is unrecognized or represents more than one time zone. " +
+                "You must configure either the server or JDBC driver (via the 'connectionTimeZone' configuration property) to " +
+                "use a more specific time zone value if you want to utilize time zone support.")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte/issues/41614", "https://github.com/airbytehq/oncall/issues/5250"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("MySQL Schema change error")
+            .regexMatchingPattern(".*whose schema isn't known to this connector*")
+            .failureType(FailureType.CONFIG)
+            .externalMessage(
+                "Your connection could not be completed because changes were detected on an unknown table (see detailed error for the table name), " +
+                    "please refresh your schema or reset the connection.")
+            .sampleInternalMessage(" java.lang.RuntimeException: java.lang.RuntimeException: org.apache.kafka.connect.errors." +
+                "ConnectException: An exception occurred in the change event producer. This connector will be stopped.")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte-internal-issues/issues/7156"))
+            .build());
+
+    this.getConnectorErrorDictionary().add(
+        new ConnectorErrorProfileBuilder()
+            .errorClass("MySQL limit reached")
+            .regexMatchingPattern(".*query execution was interrupted, maximum statement execution time exceeded*")
+            .failureType(FailureType.TRANSIENT)
+            .externalMessage("The query took too long to return results, the database read was aborted. Will retry.")
+            .sampleInternalMessage("java.lang.RuntimeException: java.lang.RuntimeException: java.sql.SQLException: " +
+                "Query execution was interrupted, maximum statement execution time exceeded")
+            .referenceLinks(Arrays.asList("https://github.com/airbytehq/airbyte-internal-issues/issues/7155"))
             .build());
   }
 
